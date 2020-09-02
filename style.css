@@ -1,0 +1,15 @@
+.game-container {
+    border: 3px solid #73AD21;
+}
+
+.title {
+    text-align: center;
+}
+
+#canvas {
+    border: 3px solid #73AD21;
+    margin: 0 auto;
+    display: block;
+    /* width: 50%;
+    height: 480px; */
+}
