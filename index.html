@@ -4,13 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Maze Game</title>
-    <!-- <script src="https://cdn.jsdelivr.net/npm/p5@1.1.9/lib/p5.js"></script> -->
     
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
 </head>
 <body>
     <h1 class="title">Maze Game</h1>
-    <!-- <canvas id ='canvas'></canvas> -->
+    <div class="game-container">
+        <div class="gameplay-container">
+            <div class="game-stats-container">
+                <div class="game-stat">
+                    Moves: <span id='moves'>0</span>
+                </div>
+                <div class="game-stat">
+                    Time: <span id='time'>0</span> sec
+                </div>
+            </div>
+            <div id="canvas-container">
+                <div id="start" class="overlay">
+                    <button id='start-btn' onclick="startGame()">Start</button>
+                </div>
+                <div id="victory" class="overlay">
+                    VICTORY
+                </div>
+            </div>
+        </div>
+        <div class="game-controls-container">
+            <div class="grid-size">
+                <label for="numCols">Number of Columns: </label>
+                <input type="number" id='numCols' value="10">
+            </div>
+            <div class="grid-size">
+                <label for="numRows">Number of Rows: </label>
+                <input type="number" id='numRows' value="10">
+            </div>
+            
+            <button id="generate-new-maze">Generate New Maze</button>
+        </div>
+    </div>
 
     <script src="sketch.js"></script>
 </body>

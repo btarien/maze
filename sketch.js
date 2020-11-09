@@ -1,34 +1,123 @@
 "use strict"
 
 // declare globals
-const numCols = 10;
-const numRows = 10;
-const cellSize = 50;
+var numCols = 6;
+var numRows = 6;
+var cellSize = 500 / numCols;
 var grid = [];
-var stack = [];
+const timer = document.getElementById("time");
+var time = 0;
+var numMoves = 0;
+var counter = null;
+var visitedCells = [];
+var currentCell = null;
+var monkeyImg = null;
+var end = null;
+
+
+// generate new maze
+const newMazeBtn = document.getElementById('generate-new-maze');
+newMazeBtn.addEventListener('click', () => {
+    context.clearRect(0, 0, numCols * cellSize, numRows * cellSize); // clear canvas
+    visitedCells = [];
+    numCols = document.getElementById("numCols").value;
+    numRows = document.getElementById("numRows").value;
+    cellSize = 500 / numCols;
+    canvas.width = numCols * cellSize;
+    canvas.height = numRows * cellSize;
+    grid = [];
+    clearInterval(counter);
+    time = 0;
+    timer.innerText = time;
+    document.getElementById('start').classList.remove('visible');
+    document.getElementById('victory').classList.remove('visible');
+    init();
+});
+
 
 // create canvas
 var canvas = document.createElement('canvas');
 canvas.id = 'canvas';
 canvas.width = numCols * cellSize;
 canvas.height = numRows * cellSize;
-var body = document.getElementsByTagName("body")[0];
-body.appendChild(canvas);
+var loc = document.getElementById("canvas-container");
+loc.appendChild(canvas);
 var context = canvas.getContext('2d');
+context.lineWidth = 2;
+context.fillStyle = '#bfd8d9';
 
-setup();
+function getCellSize(cell) {
+    return [cell.col * cellSize + context.lineWidth, cell.row * cellSize + context.lineWidth, cellSize - 2 * context.lineWidth, cellSize - 2 * context.lineWidth];
+}
 
-
-
-
-
-
-function setup() {
-    // animateGrid()
+async function init() {
     createGrid();
     const start = grid[0][0]; // start at top left cell
-    const end = grid[1][1];
-    recursiveDFS(start);
+    end = grid[numCols - 1][numRows - 1];
+    currentCell = start;
+    await recursiveDFS(start);
+    context.globalCompositeOperation='source-over';
+    monkeyImg = new Image();
+    monkeyImg.src = 'images/monkey.png';
+    monkeyImg.onload = () => {
+        const [topLeftX, topLeftY, width, height] = getCellSize(start);
+        context.drawImage(monkeyImg, topLeftX, topLeftY, width, height);
+    };
+    const bananaImg = new Image();
+    bananaImg.src = 'images/bananas.png';
+    bananaImg.onload = () => {
+        const [topLeftX, topLeftY, width, height] = getCellSize(end);
+        context.drawImage(bananaImg, topLeftX, topLeftY, width, height);
+    };
+    await delay(300);
+    document.getElementById('start').classList.add('visible');
+}
+
+function startGame() {
+    document.getElementById('start').classList.remove('visible');
+    counter = startTimer();
+    document.addEventListener('keydown', (event) => {
+        console.log(event.key);
+        switch(event.key) {
+            case "ArrowLeft":
+                move('left');
+                break;
+            case "ArrowRight":
+                move('right');
+                break;
+            case "ArrowUp":
+                move('top');
+                break;
+            case "ArrowDown":
+                move('bottom');
+                break;
+        }         
+    });
+}
+
+function move(direction) {
+    // debugger;
+    if(!currentCell.walls[direction]) {
+        var [topLeftX, topLeftY, width, height] = getCellSize(currentCell);
+        context.clearRect(topLeftX, topLeftY, width, height);
+        context.fillRect(topLeftX, topLeftY, width, height);
+        currentCell = currentCell.neighbors[direction];
+        [topLeftX, topLeftY, width, height] = getCellSize(currentCell);;
+        context.drawImage(monkeyImg, topLeftX, topLeftY, width, height);
+
+        if(currentCell === end) {
+            clearInterval(counter);
+            getEventListeners().click.forEach((e)=>{e.remove()})
+            document.getElementById('victory').classList.add('visible');
+        }
+    }
+}
+
+function startTimer() {
+    return setInterval(() => {
+        time++;
+        timer.innerText = time;
+    }, 1000);
 }
 
 class Cell {
@@ -106,30 +195,32 @@ function getNextNeighbor(cell) {
 
 function delay(ms) {
     return new Promise(resolve => {
-        console.log("waiting...");
         setTimeout(resolve, ms)
     });
 } 
 
 async function recursiveDFS(currentCell) {
     highlightCell(currentCell);
-    // debugger
     currentCell.visited = true;
     var [next, direction] = getNextNeighbor(currentCell);
 
     while(typeof(next) != 'undefined') {
+        await delay(20);
         removeWall(currentCell, next, direction);
         highlightCell(next);
-        recursiveDFS(next);
+        await recursiveDFS(next);
         [next, direction] = getNextNeighbor(currentCell);
     }
 }
 
-function highlightCell(cell) {
-    context.globalCompositeOperation='destination-over'; // fill rect under existing grid
-    const topLeft = [(cell.col) * cellSize, (cell.row) * cellSize];
-    context.fillStyle = '#FF0000';
-    context.fillRect(topLeft[0], topLeft[1], cellSize, cellSize);
+function highlightCell(newCell) {
+    visitedCells.push(newCell);
+    context.fillStyle = '#bfd8d9';
+    visitedCells.forEach((cell) => {
+        context.globalCompositeOperation='destination-over'; // fill rect under existing grid
+        var topLeft = [(cell.col) * cellSize, (cell.row) * cellSize];
+        context.fillRect(topLeft[0], topLeft[1], cellSize, cellSize);
+    });
 }
 
 function removeWall(cell1, cell2, direction) {
@@ -169,8 +260,6 @@ function drawGridLines(cell) {
     const bottomLeft =  [ cell.col         * cellSize, (cell.row + 1)     * cellSize];
     const bottomRight = [(cell.col + 1)    * cellSize, (cell.row + 1)     * cellSize];
 
-    context.lineWidth = 2;
-
     //draw top line
     if(cell.walls.top){
         context.beginPath();
@@ -204,6 +293,8 @@ function drawGridLines(cell) {
     }
 }
 
+
+init();
 
 // function iterativeDFS(start) {
 //     // iterative depth-first search
